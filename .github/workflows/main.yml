@@ -1,0 +1,71 @@
+#
+name: Create and publish a Docker image
+
+on:
+  workflow_dispatch:
+    
+env:
+  REGISTRY: ghcr.io
+  IMAGE_BASENAME: peanutsguy/coder
+  AZFUN_SUFFIX: azurefunction
+  SWAPP_SUFFIX: staticwebapp
+
+jobs:
+  build-and-push-image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3.4.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      #Azure Function
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta_funapp
+        uses: docker/metadata-action@v5.7.0
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_BASENAME }}_${{ env.AZFUN_SUFFIX }}
+      - name: Build and push Docker image
+        id: push_funapp
+        uses: docker/build-push-action@v6.16.0
+        with:
+          context: ./azurefunction/.
+          push: true
+          tags: ${{ steps.meta_funapp.outputs.tags }}
+          labels: ${{ steps.meta_funapp.outputs.labels }}
+      - name: Generate artifact attestation
+        uses: actions/attest-build-provenance@v2.3.0
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_BASENAME }}_${{ env.AZFUN_SUFFIX }}
+          subject-digest: ${{ steps.push_funapp.outputs.digest }}
+          push-to-registry: true
+      #Azure Static Web App
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta_swapp
+        uses: docker/metadata-action@v5.7.0
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_BASENAME }}_${{ env.SWAPP_SUFFIX }}
+      - name: Build and push Docker image
+        id: push_swapp
+        uses: docker/build-push-action@v6.16.0
+        with:
+          context: ./staticwebapp/.
+          push: true
+          platforms: linux/arm64,linux/amd64
+          tags: ${{ steps.meta_swapp.outputs.tags }}
+          labels: ${{ steps.meta_swapp.outputs.labels }}
+      - name: Generate artifact attestation
+        uses: actions/attest-build-provenance@v2.3.0
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_BASENAME }}_${{ env.SWAPP_SUFFIX }}
+          subject-digest: ${{ steps.push_swapp.outputs.digest }}
+          push-to-registry: true
+      
