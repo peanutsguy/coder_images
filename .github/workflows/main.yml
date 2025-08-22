@@ -3,7 +3,19 @@ name: Create and publish a Docker image
 
 on:
   workflow_dispatch:
-    
+    inputs:
+      image:
+        description: 'The name of the Docker image to build'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - azurefunction
+          - staticwebapp
+          - azureopentofu
+          - azureterraform
+          - azureterragrunt
 env:
   REGISTRY: ghcr.io
   IMAGE_BASENAME: peanutsguy/coder
@@ -11,9 +23,11 @@ env:
   SWAPP_SUFFIX: staticwebapp
   AZOTF_SUFFIX: azureopentofu
   AZTERRA_SUFFIX: azureterraform
+  AZTGRUNT_SUFFIX: azureterragrunt
 
 jobs:
   azurefunction:
+    if: ${{ github.event.inputs.image == 'azurefunction' || github.event.inputs.image == 'all' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -52,6 +66,7 @@ jobs:
           push-to-registry: true
 
   staticwebapp:
+    if: ${{ github.event.inputs.image == 'staticwebapp' || github.event.inputs.image == 'all' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -95,6 +110,7 @@ jobs:
           push-to-registry: true
 
   azureopentofu:
+    if: ${{ github.event.inputs.image == 'azureopentofu' || github.event.inputs.image == 'all' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -138,6 +154,7 @@ jobs:
           push-to-registry: true
 
   azureterraform:
+    if: ${{ github.event.inputs.image == 'azureterraform' || github.event.inputs.image == 'all' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -177,5 +194,49 @@ jobs:
         uses: actions/attest-build-provenance@v2.3.0
         with:
           subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_BASENAME }}_${{ env.AZTERRA_SUFFIX }}
+          subject-digest: ${{ steps.push_azterra.outputs.digest }}
+          push-to-registry: true
+
+  azureterragrunt:
+    if: ${{ github.event.inputs.image == 'azureterragrunt' || github.event.inputs.image == 'all' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3.4.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta_azterra
+        uses: docker/metadata-action@v5.7.0
+        with:
+          flavor: |
+            latest=true
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_BASENAME }}_${{ env.AZTGRUNT_SUFFIX }}
+      - name: Build and push Docker image
+        id: push_azterra
+        uses: docker/build-push-action@v6.16.0
+        with:
+          context: ./azureterragrunt/.
+          push: true
+          platforms: linux/arm64,linux/amd64
+          tags: ${{ steps.meta_azterra.outputs.tags }}
+          labels: ${{ steps.meta_azterra.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Generate artifact attestation
+        uses: actions/attest-build-provenance@v2.3.0
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_BASENAME }}_${{ env.AZTGRUNT_SUFFIX }}
           subject-digest: ${{ steps.push_azterra.outputs.digest }}
           push-to-registry: true

@@ -1,0 +1,13 @@
+#!/bin/bash
+if [ -z "${1}"  ]; then
+	dir="$PWD"
+else
+	dir="$1"
+fi
+echo "===== START $dir  ====="
+currentdir=$PWD
+cd "$dir" && terraform init --backend=false;
+terraform validate;
+find -iname ".terraform*" -not -iname ".terraform-docs.yml" -exec rm -rf {} \;
+cd "$currentdir"
+echo "===== END $dir ====="
