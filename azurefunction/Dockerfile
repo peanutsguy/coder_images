@@ -3,7 +3,7 @@ LABEL org.opencontainers.image.source="https://github.com/peanutsguy/coder_image
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install -y software-properties-common git curl build-essential sudo podman
+RUN apt-get update && apt-get install -y git curl build-essential sudo podman
 RUN curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg && mv microsoft.gpg /etc/apt/trusted.gpg.d/microsoft.gpg && sudo sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/debian/12/prod bookworm main" > /etc/apt/sources.list.d/dotnetdev.list' && apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y azure-functions-core-tools-4
 
 RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
