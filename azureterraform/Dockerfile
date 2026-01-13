@@ -26,7 +26,14 @@ RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/h
 
 RUN apt-get update && apt-get install -y terraform
 
-RUN curl -fsSL https://opencode.ai/install | bash
+# Download and modify the install script to use a hardcoded path instead of HOME-based path
+RUN curl -fsSL https://opencode.ai/install -o /tmp/opencode_install.sh && \
+    sed -i 's|INSTALL_DIR=\$HOME/.opencode/bin|INSTALL_DIR=/usr/local/bin|g' /tmp/opencode_install.sh && \
+    chmod +x /tmp/opencode_install.sh && \
+    /tmp/opencode_install.sh && \
+    rm -f /tmp/opencode_install.sh && \
+    # Verify installation location
+    which opencode | grep -q /usr/local/bin/opencode
 
 RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 
