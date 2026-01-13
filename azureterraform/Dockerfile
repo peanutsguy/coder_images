@@ -1,9 +1,11 @@
-FROM ubuntu:22.04
+FROM debian:13-slim
 LABEL org.opencontainers.image.source="https://github.com/peanutsguy/coder_images"
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && \
+	apt-get upgrade -y && \
+	apt-get install -y \
 	apt-utils \
 	curl \
 	git \
@@ -13,19 +15,19 @@ RUN apt-get update && apt-get install -y \
 	unzip \
 	jq \
 	apt-transport-https \
-	software-properties-common
+	gnupg \
+	lsb-release
 
-RUN wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
-RUN echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list
+RUN wget -O - https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list
 
-RUN wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | tee /usr/share/keyrings/trivy.gpg > /dev/null
-RUN echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb generic main" | tee -a /etc/apt/sources.list.d/trivy.list
+RUN apt-get update && apt-get install -y terraform
 
-RUN apt-get update && apt-get install -y terraform trivy
+RUN curl -fsSL https://opencode.ai/install | bash
 
 RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 
-RUN rm -rf /var/lib/apt/lists/*
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY bin/* /usr/local/bin/
 WORKDIR /usr/local/bin
