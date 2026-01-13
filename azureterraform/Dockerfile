@@ -2,6 +2,8 @@ FROM debian:13-slim
 LABEL org.opencontainers.image.source="https://github.com/peanutsguy/coder_images"
 
 ENV DEBIAN_FRONTEND=noninteractive
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
 
 RUN apt-get update && \
 	apt-get upgrade -y && \
@@ -16,7 +18,8 @@ RUN apt-get update && \
 	jq \
 	apt-transport-https \
 	gnupg \
-	lsb-release
+	lsb-release \
+	procps
 
 RUN wget -O - https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
 RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list
@@ -27,7 +30,9 @@ RUN curl -fsSL https://opencode.ai/install | bash
 
 RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN apt-get purge -y --auto-remove && \ 
+	apt-get clean && \ 
+	rm -rf /var/lib/apt/lists/*
 
 COPY bin/* /usr/local/bin/
 WORKDIR /usr/local/bin
