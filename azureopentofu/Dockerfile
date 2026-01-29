@@ -1,9 +1,13 @@
-FROM ubuntu:22.04
+FROM debian:13-slim
 LABEL org.opencontainers.image.source="https://github.com/peanutsguy/coder_images"
 
 ENV DEBIAN_FRONTEND=noninteractive
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && \
+	apt-get upgrade -y && \
+	apt-get install -y \
 	apt-utils \
 	curl \
 	git \
@@ -13,7 +17,10 @@ RUN apt-get update && apt-get install -y \
 	unzip \
 	jq \
 	apt-transport-https \
-	software-properties-common
+	software-properties-common \
+	gnupg \
+	lsb-release \
+	procps
 
 RUN curl --proto '=https' --tlsv1.2 -fsSL https://get.opentofu.org/install-opentofu.sh -o install-opentofu.sh && chmod +x install-opentofu.sh && ./install-opentofu.sh --install-method deb && rm install-opentofu.sh
 

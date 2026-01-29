@@ -1,11 +1,15 @@
-FROM ubuntu:22.04
+FROM debian:13-slim
 LABEL org.opencontainers.image.source="https://github.com/peanutsguy/coder_images"
 
 ENV DEBIAN_FRONTEND=noninteractive
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
 
 ARG TARGETARCH
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && \
+	apt-get upgrade -y && \
+	apt-get install -y \
 	apt-utils \
 	curl \
 	git \
@@ -15,7 +19,10 @@ RUN apt-get update && apt-get install -y \
 	unzip \
 	jq \
 	apt-transport-https \
-	software-properties-common
+	software-properties-common \
+	gnupg \
+	lsb-release \
+	procps
 
 RUN wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
 RUN echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list
