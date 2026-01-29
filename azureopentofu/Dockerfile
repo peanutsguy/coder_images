@@ -17,7 +17,6 @@ RUN apt-get update && \
 	unzip \
 	jq \
 	apt-transport-https \
-	software-properties-common \
 	gnupg \
 	lsb-release \
 	procps

@@ -8,7 +8,6 @@ ENV LC_ALL=C.UTF-8
 RUN apt-get update && \
 	apt-get upgrade -y && \
 	apt-get install -y \
-	software-properties-common \
 	build-essential \
 	curl \
 	git \
