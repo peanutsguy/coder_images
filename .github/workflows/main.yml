@@ -102,8 +102,6 @@ jobs:
           platforms: linux/arm64,linux/amd64
           tags: ${{ steps.meta_python.outputs.tags }}
           labels: ${{ steps.meta_python.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
       - name: Generate artifact attestation
         uses: actions/attest-build-provenance@v2.3.0
         with:
